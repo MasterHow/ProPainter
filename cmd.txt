@@ -1,0 +1,88 @@
+#####################################################
+新建会话：tmux new -s SESSION-NAME
+杀死会话：tmux kill-session -t 0
+接入会话：tmux attach-session -t 0
+退出并杀死当前会话：ctrl+d
+
+# 远程连接tensorboard
+ssh -p 40216 -NL 8008:localhost:9009 root@ssh.atom.ks.supremind.info
+链接成功后会卡死，直接新开一个终端启动tb就好了
+
+# 打开tb
+tensorboard --logdir='./' --port=9009
+http://127.0.0.1:8008/
+
+# 上传数据
+scp -P 40272 C:\Users\shihao\Downloads\DAIR-V2X-I\single-infrastructure-side-.zip root@ssh.atom.ks.supremind.info:/workspace/mnt/storage/shihao/CoBEV/dair-v2x-i/
+scp -P 40216 F:\Dataset\Youtube-VOS\train_all_frames.zip root@ssh.atom.ks.supremind.info:/workspace/mnt/storage/shihao/VI/unzip_dataset/youtube-vos
+
+# 下载数据
+scp -P 40272 root@ssh.atom.ks.supremind.info:/workspace/mnt/storage/shihao/shihao-cephs/SSC_out/diagnose_tensorboard.py D:\
+scp -P 40216 root@ssh.atom.ks.supremind.info:/workspace/mnt/storage/shihao/MyCode-01/ProPainter/experiments_model/propainter_reproduce_propainter/dis_700000.pth D:\
+
+# 清除显卡进程
+安装fuser： apt-get install psmisc
+fuser -v /dev/nvidia* |awk '{for(i=1;i<=NF;i++)print "kill -9 " $i;}' | sh
+
+# 查看所有进程
+ps -aux
+
+# 查看服务器端口占用
+netstat -ap
+
+# 迭代删除
+rm -rf 路径
+
+# 对执行脚本赋予可读可写可执行权限
+sudo chmod 777 ×××
+
+# pip换源
+pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+
+# 激活conda环境
+source /opt/conda/bin/activate
+
+# 查看磁盘空间
+df -h
+
+# 查看当前目录下文件/文件夹数量
+ls -l | wc -l 不包含子目录中的文件
+ls -lR|grep "^-"| wc - 包含子目录中的文件
+
+# 环境配置
+(reg.supremind.info/algorithmteam/supreimage/tools/smarttrafficintegrateddemo:pytorch1.9-trt7.2.2-ubuntu20.04-cuda11.2)
+source /opt/conda/bin/activate
+pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+cd /workspace/mnt/storage/shihao/MyCode-01/ProPainter
+pip3 install -r requirements.txt
+备注：配置时间较短 torch 1.9 无mp后端 推理速度 2.09it/s
+
+(reg.supremind.info/algorithmteam/supreimage/tools/smarttrafficintegrateddemo:pytorch1.9-trt7.2.2-ubuntu20.04-cuda11.2)
+source /opt/conda/bin/activate
+conda create -n propainter python=3.8 -y
+conda activate propainter
+pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+cd /workspace/mnt/storage/shihao/MyCode-01/ProPainter
+pip3 install -r requirements.txt
+pip3 install tensorboard
+pip3 install lpips
+备注：配置时间较长 torch 2.1.0 有mp后端加速 推理速度 3.86it/s 决定采用该方案
+
+# 增大内存空间
+ulimit -SHn 51200
+
+# 调试
+remote python 3.7.3
+
+#####################################################
+# 测试推理
+python inference_propainter.py --video inputs/object_removal/bmx-trees --mask inputs/object_removal/bmx-trees_mask
+
+# 制作光流数据集 [tmux-0]
+[Youtube] python scripts/compute_flow.py --root_path /workspace/mnt/storage/shihao/VI/unzip_dataset/youtube-vos/JPEGImages \
+--save_path /workspace/mnt/storage/shihao/VI-Flow/youtube-vos/Flows_flo --height 240 --width 432
+[DAVIS] python scripts/compute_flow.py --root_path /workspace/mnt/storage/shihao/VI/unzip_dataset/davis/JPEGImages \
+--save_path /workspace/mnt/storage/shihao/VI-Flow/davis/Flows_flo --height 240 --width 432
+
+# 复现训练 (直接训练propainter)
+python train.py -c configs/reproduce_propainter.json

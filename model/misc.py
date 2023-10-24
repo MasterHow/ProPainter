@@ -53,8 +53,12 @@ def get_root_logger(logger_name='basicsr', log_level=logging.INFO, log_file=None
     return logger
 
 
+# True if torch version >= 1.12.0
 IS_HIGH_VERSION = [int(m) for m in list(re.findall(r"^([0-9]+)\.([0-9]+)\.([0-9]+)([^0-9][a-zA-Z0-9]*)?(\+git.*)?$",\
     torch.__version__)[0][:3])] >= [1, 12, 0]
+
+# # we use torch == 1.9.0
+# IS_HIGH_VERSION = False
 
 def gpu_is_available():
     if IS_HIGH_VERSION:

@@ -72,7 +72,9 @@ class Trainer:
 
         # set raft
         self.fix_raft = RAFT_bi(device = self.config['device'])
-        self.fix_flow_complete = RecurrentFlowCompleteNet('/mnt/lustre/sczhou/VQGANs/CodeMOVI/experiments_model/recurrent_flow_completion_v5_train_flowcomp_v5/gen_760000.pth')
+        # self.fix_flow_complete = RecurrentFlowCompleteNet('/mnt/lustre/sczhou/VQGANs/CodeMOVI/experiments_model/recurrent_flow_completion_v5_train_flowcomp_v5/gen_760000.pth')
+        self.fix_flow_complete = RecurrentFlowCompleteNet(
+            '/workspace/mnt/storage/shihao/MyCode-01/ProPainter/weights/recurrent_flow_completion.pth')
         for p in self.fix_flow_complete.parameters():
             p.requires_grad = False
         self.fix_flow_complete.to(self.config['device'])
