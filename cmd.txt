@@ -14,7 +14,7 @@ http://127.0.0.1:8008/
 
 # 上传数据
 scp -P 40272 C:\Users\shihao\Downloads\DAIR-V2X-I\single-infrastructure-side-.zip root@ssh.atom.ks.supremind.info:/workspace/mnt/storage/shihao/CoBEV/dair-v2x-i/
-scp -P 40216 F:\Dataset\Youtube-VOS\train_all_frames.zip root@ssh.atom.ks.supremind.info:/workspace/mnt/storage/shihao/VI/unzip_dataset/youtube-vos
+scp -P 40216 D:\迅雷下载\smmc-Linux_amd64.tar.gz root@ssh.atom.ks.supremind.info:/workspace/mnt/storage/shihao/SemanticKITTI-SSC/src
 
 # 下载数据
 scp -P 40272 root@ssh.atom.ks.supremind.info:/workspace/mnt/storage/shihao/shihao-cephs/SSC_out/diagnose_tensorboard.py D:\
@@ -53,7 +53,7 @@ ls -lR|grep "^-"| wc - 包含子目录中的文件
 (reg.supremind.info/algorithmteam/supreimage/tools/smarttrafficintegrateddemo:pytorch1.9-trt7.2.2-ubuntu20.04-cuda11.2)
 source /opt/conda/bin/activate
 pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-cd /workspace/mnt/storage/shihao/MyCode-01/ProPainter
+cd /workspace/mnt/storage/shihao/MyCode-02/ProPainter
 pip3 install -r requirements.txt
 备注：配置时间较短 torch 1.9 无mp后端 推理速度 2.09it/s
 
@@ -62,11 +62,13 @@ source /opt/conda/bin/activate
 conda create -n propainter python=3.8 -y
 conda activate propainter
 pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-cd /workspace/mnt/storage/shihao/MyCode-01/ProPainter
+cd /workspace/mnt/storage/shihao/MyCode-02/ProPainter
 pip3 install -r requirements.txt
 pip3 install tensorboard
 pip3 install lpips
 备注：配置时间较长 torch 2.1.0 有mp后端加速 推理速度 3.86it/s 决定采用该方案
+
+# TODO 使用nvidia官方镜像重新配置docker环境
 
 # 增大内存空间
 ulimit -SHn 51200
@@ -74,15 +76,52 @@ ulimit -SHn 51200
 # 调试
 remote python 3.7.3
 
+# smmc命令存储和上传数据
+#列出云端数据
+smmc ls ks/personal/shihao
+smmc ls ks/supremind-atom/sync-to-ks-10t/shihao
+
+# 将本地文件上传至对象存储
+#将本地文件README.md上传至金山云上海地域对象存储personal bucket根目录下
+smmc cp README.md ks/personal
+#将本地文件README.md上传至云之鼎机房对象存储personal bucket下的test目录
+smmc cp README.md yzd/personal/test
+
+# 将对象存储上的文件下载至本地
+#将金山云上海地域对象存储personal bucket根目录下的README.md文件下载至本地/tmp目录
+smmc cp ks/personal/README.md /tmp
+#将云之鼎机房对象存储personal bucket下的test目录下的文件README.md下载至本地/tmp目录
+smmc cp yzd/personal/test/README.md /tmp/
+
+# 将本地文件夹上传至对象存储
+#将本地文件夹docs(相对路径)上传至金山云上海地域对象存储personal bucket下的test目录
+smmc cp -r docs ks/personal/test
+#将本地文件夹docs(绝对路径)上传至云之鼎机房对象存储personal bucket下的test目录
+smmc cp -r /Users/zhuyongsheng/Documents/gitlab/mc/docs yzd/personal/test/
+
+# 将对象存储上的文件夹下载至本地
+#将金山云上海地域对象存储personal bucket下的test/docs目录下载至本地当前文件夹下
+smmc cp -r ks/personal/test/docs ./
+#将云之鼎机房对象存储personal bucket下的test/docs目录下载至本地/tmp目录下
+smmc cp -r yzd/personal/test/docs /tmp/
+[tmux-0] smmc cp -r ks/supremind-atom/sync-to-ks-10t/shihao/VI/ /workspace/mnt/storage/shihao/VI/
+[tmux-1] smmc cp -r ks/supremind-atom/sync-to-ks-10t/shihao/VI-Flow/ /workspace/mnt/storage/shihao/VI/VI-Flow/
 #####################################################
 # 测试推理
 python inference_propainter.py --video inputs/object_removal/bmx-trees --mask inputs/object_removal/bmx-trees_mask
 
-# 制作光流数据集 [tmux-0]
+# 制作光流数据集
 [Youtube] python scripts/compute_flow.py --root_path /workspace/mnt/storage/shihao/VI/unzip_dataset/youtube-vos/JPEGImages \
 --save_path /workspace/mnt/storage/shihao/VI-Flow/youtube-vos/Flows_flo --height 240 --width 432
 [DAVIS] python scripts/compute_flow.py --root_path /workspace/mnt/storage/shihao/VI/unzip_dataset/davis/JPEGImages \
 --save_path /workspace/mnt/storage/shihao/VI-Flow/davis/Flows_flo --height 240 --width 432
 
+[KITTI360-EXO] python scripts/compute_flow.py --root_path /workspace/mnt/storage/shihao/VI/unzip_dataset/KITTI-360EX/OuterPinhole/JPEGImages \
+--save_path /workspace/mnt/storage/shihao/VI/VI-Flow/KITTI-360EX/OuterPinhole/Flows_flo --height 240 --width 432
+
+
 # 复现训练 (直接训练propainter)
 python train.py -c configs/reproduce_propainter.json
+
+# 在KITTI360-EXO上训练propainter
+
